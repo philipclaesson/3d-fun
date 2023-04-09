@@ -12,14 +12,47 @@ scene.add(cube);
 
 camera.position.z = 5;
 
+async function requestSensorPermissions() {
+    try {
+        const permissionNames = ["accelerometer", "gyroscope", "magnetometer"];
+
+        for (const permissionName of permissionNames) {
+            if (navigator.permissions) {
+                const permission = await navigator.permissions.query({ name: permissionName });
+
+                if (permission.state === "denied") {
+                    console.error(`Permission to access ${permissionName} was denied.`);
+                    return false;
+                }
+            }
+        }
+        return true;
+    } catch (error) {
+        console.error("Error while requesting sensor permissions:", error);
+        return false;
+    }
+}
+
 async function initOrientationSensor() {
     if ("AbsoluteOrientationSensor" in window) {
         try {
+            const permissionsGranted = await requestSensorPermissions();
+
+            if (!permissionsGranted) {
+                console.error("Required sensor permissions were not granted.");
+                return;
+            }
+
             const sensor = new AbsoluteOrientationSensor({ frequency: 60 });
             sensor.addEventListener("reading", () => {
                 const quaternion = new THREE.Quaternion(...sensor.quaternion);
                 cube.setRotationFromQuaternion(quaternion);
             });
+
+            sensor.addEventListener("error", (event) => {
+                console.error("Orientation sensor error:", event.error);
+            });
+
             await sensor.start();
         } catch (error) {
             console.error("Orientation sensor initialization failed:", error);
@@ -28,7 +61,6 @@ async function initOrientationSensor() {
         console.error("Orientation sensor not supported");
     }
 }
-
 
 function animate() {
     requestAnimationFrame(animate);
