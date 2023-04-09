@@ -6,7 +6,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 
@@ -17,13 +17,18 @@ async function requestSensorPermissions() {
         const permissionNames = ["accelerometer", "gyroscope", "magnetometer"];
 
         for (const permissionName of permissionNames) {
+            console.log("Requesting permission to access", permissionName)
             if (navigator.permissions) {
                 const permission = await navigator.permissions.query({ name: permissionName });
 
                 if (permission.state === "denied") {
                     console.error(`Permission to access ${permissionName} was denied.`);
                     return false;
+                } else {
+                    console.log(`Permission to access ${permissionName} was granted. ${permission.state}`);
                 }
+            } else {
+                console.error("no permissions API available")
             }
         }
         return true;
@@ -45,6 +50,7 @@ async function initOrientationSensor() {
 
             const sensor = new AbsoluteOrientationSensor({ frequency: 60 });
             sensor.addEventListener("reading", () => {
+                console.log("Orientation sensor reading:", sensor.quaternion);
                 const quaternion = new THREE.Quaternion(...sensor.quaternion);
                 cube.setRotationFromQuaternion(quaternion);
             });
