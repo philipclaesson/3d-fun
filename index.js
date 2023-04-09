@@ -63,6 +63,18 @@ async function initOrientationSensor() {
         } catch (error) {
             console.error("Orientation sensor initialization failed:", error);
         }
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (event) => {
+                const alpha = event.alpha ? THREE.MathUtils.degToRad(event.alpha) : 0;
+                const beta = event.beta ? THREE.MathUtils.degToRad(event.beta) : 0;
+                const gamma = event.gamma ? THREE.MathUtils.degToRad(event.gamma) : 0;
+
+                const euler = new THREE.Euler(beta, alpha, -gamma, "YXZ");
+                cube.setRotationFromEuler(euler);
+            });
+        } else {
+            console.error("Device orientation not supported");
+        }
     } else {
         console.error("Orientation sensor not supported");
     }
